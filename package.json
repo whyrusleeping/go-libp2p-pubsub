@@ -1,0 +1,14 @@
+{
+  "author": "whyrusleeping",
+  "bugs": {
+    "url": "https://github.com/ipfs/go-libp2p-pubsub"
+  },
+  "gx": {
+    "dvcsimport": "github.com/ipfs/go-libp2p-pubsub"
+  },
+  "gxVersion": "0.6.0",
+  "language": "go",
+  "license": "",
+  "name": "go-libp2p-pubsub",
+  "version": "0.0.0"
+}

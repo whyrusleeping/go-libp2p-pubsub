@@ -93,7 +93,7 @@ func (tm *TopicManager) Subscribe(ctx context.Context, itor peer.ID, topic strin
 }
 
 func (cli *client) rejoinRoot() error {
-
+	panic("not yet implemented")
 }
 
 func (cli *client) processMessages() {
