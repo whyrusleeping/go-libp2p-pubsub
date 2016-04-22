@@ -39,9 +39,11 @@ type child struct {
 	size     int
 	children []string
 	chlock   sync.Mutex
+
+	dead bool
 }
 
-func (c *child) handleChildMessages() {
+func (sub *subtree) handleChildMessages(c *child) {
 	for {
 		m, err := readMessage(c.s)
 		if err != nil {
@@ -58,7 +60,15 @@ func (c *child) handleChildMessages() {
 			c.children = m.Peers // TODO: convert these back to peer.IDs?
 			c.chlock.Unlock()
 		case Part:
-			log.Error("got 'Part' message from child")
+			c.chlock.Lock()
+			c.dead = true
+			c.chlock.Unlock()
+
+			if err := sub.redistributeChildren(c); err != nil {
+				log.Infof("error redistributing children of %s: %s", c.id, err)
+				return
+			}
+
 		default:
 			log.Error("got weird message from child: ", m)
 		}
@@ -66,12 +76,10 @@ func (c *child) handleChildMessages() {
 }
 
 func (sub *subtree) Close() error {
-	// subscription cancelled,
-	// we *should* reroute our children here before halting but if we
-	// drop out, our parent will handle it for us for now we can just
-	// rely on this fallback behaviour, but in the future we should
-	// make sure to handle it the best we can here to avoid more
-	// messages being dropped
+	for _, ch := range sub.children {
+		ch.s.Close()
+	}
+
 	if sub.in != nil {
 		partmes := &Message{
 			Type: Part,
@@ -84,6 +92,7 @@ func (sub *subtree) Close() error {
 
 		return sub.in.Close()
 	}
+
 	return nil
 }
 
@@ -96,15 +105,18 @@ func (sub *subtree) joinNewPeer(s net.Stream) error {
 // handleJoin inserts the given stream into the pubsub tree below this node
 // if prio is true, this join has 'priority' meaning more effort will be made to
 // join them higher up in the tree (if possible)
+// Note: handleJoin should only be called with sub.chlock held
 func (sub *subtree) handleJoin(s net.Stream, prio bool) error {
 	w := sub.treeWidth
 	if prio {
 		w = sub.treeMaxWidth
 	}
+
 	if len(sub.children) >= w {
 		defer s.Close()
 		return sub.redirectJoin(s)
 	}
+
 	welcome := &Message{
 		Type:         Update,
 		Peers:        []string{sub.h.ID().Pretty()},
@@ -134,7 +146,8 @@ func (sub *subtree) handleJoin(s net.Stream, prio bool) error {
 	}
 
 	c := &child{s: s, id: s.Conn().RemotePeer()}
-	go c.handleChildMessages()
+	go sub.handleChildMessages(c)
+
 	sub.children[c.id] = c
 	return nil
 }
@@ -148,7 +161,7 @@ func (sub *subtree) redirectJoin(s net.Stream) error {
 	var minc *child
 	for _, c := range sub.children {
 		c.chlock.Lock()
-		if c.size < min {
+		if !c.dead && c.size < min {
 			min = c.size
 			minc = c
 		}
@@ -308,6 +321,15 @@ func (sub *subtree) forwardMessage(m *Message) error {
 
 	var dead []*child
 	for _, c := range sub.children {
+		// TODO: in parallel
+		c.chlock.Lock()
+		ch_dead := c.dead
+		c.chlock.Unlock()
+		if ch_dead {
+			fmt.Println("skipping dead child while forwarding")
+			delete(sub.children, c.id)
+		}
+
 		err := writeMessage(c.s, m)
 		if err != nil {
 			dead = append(dead, c)
@@ -320,26 +342,33 @@ func (sub *subtree) forwardMessage(m *Message) error {
 	if len(dead) > 0 {
 		for _, h := range dead {
 			delete(sub.children, h.id)
-			for _, child := range h.children {
-				pid, err := peer.IDB58Decode(child)
-				if err != nil {
-					log.Error("error decoding peers child ID: ", err)
-					continue
-				}
-
-				cstr, err := sub.h.NewStream(sub.ctx, sub.protoid, pid)
-				if err != nil {
-					log.Error("error opening stream for tree repair")
-					continue
-				}
-
-				if err := sub.handleJoin(cstr, true); err != nil {
-					log.Error("repairing child: ", err)
-					continue
-				}
+			if err := sub.redistributeChildren(h); err != nil {
+				log.Error(err)
+				continue
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (sub *subtree) redistributeChildren(h *child) error {
+	// TODO: in parallel
+	for _, child := range h.children {
+		pid, err := peer.IDB58Decode(child)
+		if err != nil {
+			return fmt.Errorf("error decoding peers child ID: %s", err)
+		}
+
+		cstr, err := sub.h.NewStream(sub.ctx, sub.protoid, pid)
+		if err != nil {
+			return fmt.Errorf("error opening stream for tree repair")
+		}
+
+		if err := sub.handleJoin(cstr, true); err != nil {
+			return fmt.Errorf("repairing child: %s", err)
+		}
 	}
 
 	return nil

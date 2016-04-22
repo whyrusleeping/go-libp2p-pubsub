@@ -29,6 +29,7 @@ func (c *client) Messages() <-chan []byte {
 
 func (c *client) Close() error {
 	defer c.cancel()
+	c.sub.h.RemoveStreamHandler(c.protoid)
 	return c.sub.Close()
 }
 
@@ -103,7 +104,7 @@ func (cli *client) processMessages() {
 		m, err := readMessage(cli.sub.in)
 		if err != nil {
 			cli.sub.in = nil
-			log.Info("subscription paused, error on read: %s", err)
+			log.Infof("subscription paused, error on read: %s", err)
 			select {
 			case <-cli.sub.ctx.Done():
 				return

@@ -86,7 +86,10 @@ func clearWaitingMessages(subs []*client) {
 		looping := true
 		for looping {
 			select {
-			case <-s.Messages():
+			case _, ok := <-s.Messages():
+				if !ok {
+					looping = false
+				}
 			default:
 				looping = false
 			}
@@ -119,7 +122,7 @@ func checkSystem(t *Topic, subs []*client, skip map[int]bool, mid int) error {
 				return fmt.Errorf("wrong data on node %d. expected %q but got %q", i, string(mes), string(data))
 			}
 		case <-time.After(time.Second * 5):
-			return fmt.Errorf("Timeout waiting for peer %d", i)
+			return fmt.Errorf("Timeout waiting for peer %d (%s)", i, ch.sub.h.ID())
 		}
 	}
 
@@ -139,6 +142,7 @@ func TestBasicPubsub(t *testing.T) {
 	}
 
 	topic, _, subchs := initPubsub(t, ctx, hosts)
+	defer topic.Close()
 	defer closeSubs(subchs)
 
 	for i := 0; i < 10; i++ {
@@ -149,6 +153,7 @@ func TestBasicPubsub(t *testing.T) {
 	}
 }
 
+// tests nodes dropping abruptly (without sending part messages)
 func TestNodesDropping(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -265,6 +270,52 @@ func TestLowerNodesDropping(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		err = checkSystem(topic, subchs, map[int]bool{
 			2: true,
+		}, i+100)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestNodesDroppingGracefully(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	count := 4
+	hosts := makeNetHosts(t, ctx, count)
+
+	err := connectUp(hosts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	topic, _, subchs := initPubsub(t, ctx, hosts)
+	defer closeSubs(subchs)
+
+	err = checkSystem(topic, subchs, nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = subchs[0].Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Millisecond * 100)
+
+	err = checkSystem(topic, subchs, map[int]bool{
+		0: true,
+	}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 100)
+	clearWaitingMessages(subchs)
+
+	for i := 0; i < 10; i++ {
+		err = checkSystem(topic, subchs, map[int]bool{
+			0: true,
 		}, i+100)
 		if err != nil {
 			t.Fatal(err)
