@@ -5,12 +5,12 @@ import (
 	"io"
 	"sync"
 
-	"gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
+	"golang.org/x/net/context"
 
+	"github.com/ipfs/go-libp2p-peer"
 	"github.com/ipfs/go-libp2p/p2p/host"
 	"github.com/ipfs/go-libp2p/p2p/net"
 	"github.com/ipfs/go-libp2p/p2p/protocol"
-	"gx/ipfs/QmY1xNhBfF9xA1pmD8yejyQAyd77K68qNN6JPM1CN2eiRu/go-libp2p-peer"
 )
 
 const DefaultTreeWidth = 2

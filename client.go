@@ -6,9 +6,9 @@ import (
 	"github.com/ipfs/go-libp2p/p2p/net"
 	"github.com/ipfs/go-libp2p/p2p/protocol"
 
-	"gx/ipfs/QmY1xNhBfF9xA1pmD8yejyQAyd77K68qNN6JPM1CN2eiRu/go-libp2p-peer"
-	"gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
-	logging "gx/ipfs/Qmazh5oNUVsDZTs2g59rq8aYQqwpss8tcUWQzor5sCCEuH/go-log"
+	"github.com/ipfs/go-libp2p-peer"
+	logging "github.com/ipfs/go-log"
+	"golang.org/x/net/context"
 )
 
 var SubRepairTimeout = time.Second * 15

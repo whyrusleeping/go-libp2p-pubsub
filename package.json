@@ -6,6 +6,14 @@
   "gx": {
     "dvcsimport": "github.com/ipfs/go-libp2p-pubsub"
   },
+  "gxDependencies": [
+    {
+      "author": "whyrusleeping",
+      "hash": "QmYgaiNVVL7f2nydijAwpDRunRkmxfu3PoK87Y3pH84uAW",
+      "name": "go-libp2p",
+      "version": "3.0.0"
+    }
+  ],
   "gxVersion": "0.6.0",
   "language": "go",
   "license": "",

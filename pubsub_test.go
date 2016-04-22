@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	context "gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
+	context "golang.org/x/net/context"
 
+	"github.com/ipfs/go-libp2p-peer"
 	host "github.com/ipfs/go-libp2p/p2p/host"
 	mocknet "github.com/ipfs/go-libp2p/p2p/net/mock"
 	testutil "github.com/ipfs/go-libp2p/p2p/test/util"
-	"gx/ipfs/QmY1xNhBfF9xA1pmD8yejyQAyd77K68qNN6JPM1CN2eiRu/go-libp2p-peer"
 )
 
 func makeHosts(t *testing.T, ctx context.Context, count int) []host.Host {
