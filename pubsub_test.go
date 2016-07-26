@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
-	context "golang.org/x/net/context"
+	context "gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
 
-	"github.com/ipfs/go-libp2p-peer"
-	host "github.com/ipfs/go-libp2p/p2p/host"
-	mocknet "github.com/ipfs/go-libp2p/p2p/net/mock"
-	testutil "github.com/ipfs/go-libp2p/p2p/test/util"
+	pstore "gx/ipfs/QmQdnfvZQuhdT93LNc5bos52wAmdr3G2p6G8teLJMEN32P/go-libp2p-peerstore"
+	"gx/ipfs/QmRBqJF7hb8ZSpRcMwUt8hNhydWcxGEhtk81HKq6oUwKvs/go-libp2p-peer"
+	host "gx/ipfs/QmVCe3SNMjkcPgnpFhZs719dheq6xE7gJwjzV7aWcUM4Ms/go-libp2p/p2p/host"
+	mocknet "gx/ipfs/QmVCe3SNMjkcPgnpFhZs719dheq6xE7gJwjzV7aWcUM4Ms/go-libp2p/p2p/net/mock"
+	testutil "gx/ipfs/QmVCe3SNMjkcPgnpFhZs719dheq6xE7gJwjzV7aWcUM4Ms/go-libp2p/p2p/test/util"
 )
 
 func makeHosts(t *testing.T, ctx context.Context, count int) []host.Host {
@@ -34,8 +35,8 @@ func makeNetHosts(t *testing.T, ctx context.Context, count int) []host.Host {
 }
 
 func connectUp(hs []host.Host) error {
-	gpi := func(h host.Host) peer.PeerInfo {
-		return peer.PeerInfo{
+	gpi := func(h host.Host) pstore.PeerInfo {
+		return pstore.PeerInfo{
 			ID:    h.ID(),
 			Addrs: h.Addrs(),
 		}

@@ -3,12 +3,12 @@ package pubsub
 import (
 	"time"
 
-	"github.com/ipfs/go-libp2p/p2p/net"
-	"github.com/ipfs/go-libp2p/p2p/protocol"
+	"gx/ipfs/QmVCe3SNMjkcPgnpFhZs719dheq6xE7gJwjzV7aWcUM4Ms/go-libp2p/p2p/net"
+	"gx/ipfs/QmVCe3SNMjkcPgnpFhZs719dheq6xE7gJwjzV7aWcUM4Ms/go-libp2p/p2p/protocol"
 
-	"github.com/ipfs/go-libp2p-peer"
-	logging "github.com/ipfs/go-log"
-	"golang.org/x/net/context"
+	logging "gx/ipfs/QmNQynaz7qfriSUJkiEZUrm2Wen1u3Kj9goZzWtrPyu7XR/go-log"
+	"gx/ipfs/QmRBqJF7hb8ZSpRcMwUt8hNhydWcxGEhtk81HKq6oUwKvs/go-libp2p-peer"
+	"gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
 )
 
 var SubRepairTimeout = time.Second * 15
