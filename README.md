@@ -7,6 +7,7 @@
 
 A basic one to many pubsub implementation on top of go-libp2p
 
+# IF YOU ARE LOOKING FOR THE PUBSUB BEING USED IN IPFS [GO HERE](https://github.com/libp2p/go-floodsub)
 ## Installation
 
 ```sh
